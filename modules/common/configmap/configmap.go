@@ -302,3 +302,28 @@ func VerifyConfigMap(
 
 	return hash, ctrl.Result{}, nil
 }
+
+// GenerateConfigs helper function to generate config maps
+func GenerateConfigs(
+	ctx context.Context, h *helper.Helper,
+	instance client.Object, envVars *map[string]env.Setter,
+	additionalTemplates map[string]string,
+	templateParameters map[string]interface{},
+	extraData map[string]string, cmLabels map[string]string,
+) error {
+	cms := []util.Template{
+		// ConfigMap
+		{
+			Name:               fmt.Sprintf("%s-config-data", instance.GetName()),
+			Namespace:          instance.GetNamespace(),
+			Type:               util.TemplateTypeConfig,
+			InstanceType:       instance.GetObjectKind().GroupVersionKind().Kind,
+			ConfigOptions:      templateParameters,
+			Labels:             cmLabels,
+			CustomData:         extraData,
+			Annotations:        map[string]string{},
+			AdditionalTemplate: additionalTemplates,
+		},
+	}
+	return EnsureConfigMaps(ctx, h, instance, cms, envVars)
+}
